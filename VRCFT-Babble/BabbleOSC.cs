@@ -49,5 +49,11 @@ namespace VRCFT_Babble
             }
             message = new OscMessage(buffer);
         }
+
+        public void Teardown()
+        {
+            ReceiverClient.Close();
+            ReceiverClient.Dispose();
+        }
     }
 }

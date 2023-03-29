@@ -1,8 +1,8 @@
 ﻿using Collections;
 using System;
 using System.Threading;
-using ViveSR.anipal.Lip;
 using VRCFaceTracking;
+using VRCFaceTracking.Params;
 using static VRCFT_Babble.BabbleExpressions;
 using static VRCFT_Babble.BabbleExpressions.UnifiedBabbleExpression;
 
@@ -10,13 +10,13 @@ namespace VRCFT_Babble
 {
     public class Babble : ExtTrackingModule
     {
-        public override (bool SupportsEye, bool SupportsLip) Supported => (false, true);
+        public override (bool SupportsEye, bool SupportsExpression) Supported => (false, true);
 
         private TwoKeyDictionary<UnifiedBabbleExpression, string, float> _mouthShape;
         private BabbleOSC _receiver;
         private const int DefaultPort = 9000;
 
-        public override (bool eyeSuccess, bool lipSuccess) Initialize(bool eye, bool lip)
+        public override (bool eyeSuccess, bool expressionSuccess) Initialize(bool eye, bool lip)
         {
             if (_receiver != null)
             {
@@ -67,23 +67,30 @@ namespace VRCFT_Babble
             }
 
             // Assuming x is left/right, y is up/down, z is forward/backwards
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.JawLeft] = _mouthShape.GetByKey1(JawLeft);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.JawRight] = _mouthShape.GetByKey1(JawRight);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.JawForward] = _mouthShape.GetByKey1(JawForward);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.JawOpen] = _mouthShape.GetByKey1(JawOpen);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.TongueLongStep2] = _mouthShape.GetByKey1(TongueOut);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.MouthPout] = _mouthShape.GetByKey1(MouthPucker) - _mouthShape.GetByKey1(MouthFunnel);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.MouthSmileLeft] = _mouthShape.GetByKey1(MouthSmile_L);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.MouthSadLeft] = _mouthShape.GetByKey1(MouthFrown_L);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.MouthSmileRight] = _mouthShape.GetByKey1(MouthSmile_R);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.MouthSadRight] = _mouthShape.GetByKey1(MouthFrown_R);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.CheekPuffLeft] = _mouthShape.GetByKey1(CheekPuff);
-            UnifiedTrackingData.LatestLipData.LatestShapes[(int)LipShape_v2.CheekPuffRight] = _mouthShape.GetByKey1(CheekPuff);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.JawLeft].Weight = _mouthShape.GetByKey1(JawLeft);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.JawRight].Weight = _mouthShape.GetByKey1(JawRight);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.JawForward].Weight = _mouthShape.GetByKey1(JawForward);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.JawOpen].Weight = _mouthShape.GetByKey1(JawOpen);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.TongueOut].Weight = _mouthShape.GetByKey1(TongueOut);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.MouthCornerPullLeft].Weight = _mouthShape.GetByKey1(MouthSmile_L); // Test!
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.MouthCornerPullRight].Weight = _mouthShape.GetByKey1(MouthSmile_R); // Test!
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.MouthCornerSlantLeft].Weight = _mouthShape.GetByKey1(MouthSmile_L); // Test!
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.MouthCornerSlantRight].Weight = _mouthShape.GetByKey1(MouthSmile_R); // Test!
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.MouthFrownLeft].Weight = _mouthShape.GetByKey1(MouthFrown_L);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.MouthFrownRight].Weight = _mouthShape.GetByKey1(MouthFrown_R);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.CheekPuffLeft].Weight = _mouthShape.GetByKey1(CheekPuff);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.CheekPuffRight].Weight = _mouthShape.GetByKey1(CheekPuff);
+             
+            var pucker = _mouthShape.GetByKey1(MouthPucker) - _mouthShape.GetByKey1(MouthFunnel);
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.LipPuckerLowerLeft].Weight = pucker;
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.LipPuckerLowerRight].Weight = pucker;
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.LipPuckerUpperLeft].Weight = pucker;
+            UnifiedTracking.Data.Shapes[(int)UnifiedExpressions.LipPuckerUpperRight].Weight = pucker;
         }
 
         public override void Teardown()
         {
-            
+            _receiver.Teardown();
         }
     }
 }
